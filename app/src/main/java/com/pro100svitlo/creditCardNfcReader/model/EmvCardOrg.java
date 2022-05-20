@@ -9,7 +9,7 @@ import java.util.List;
  * Bean used to describe data in EMV card
  *
  */
-public class EmvCard extends AbstractData {
+public class EmvCardOrg extends AbstractData {
 
 	/**
 	 * Generated serial UID
@@ -230,7 +230,7 @@ public class EmvCard extends AbstractData {
 
 	@Override
 	public boolean equals(final Object arg0) {
-		return arg0 instanceof EmvCard && cardNumber != null && cardNumber.equals(((EmvCard) arg0).getCardNumber());
+		return arg0 instanceof EmvCardOrg && cardNumber != null && cardNumber.equals(((EmvCardOrg) arg0).getCardNumber());
 	}
 
 	/**

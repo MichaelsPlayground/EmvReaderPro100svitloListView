@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public class CardNfcReaderTask {
 
@@ -62,7 +63,7 @@ public class CardNfcReaderTask {
                     "===========================================================================";
 
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CardNfcAsyncTask.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CardNfcReaderTask.class);
 
     private Provider mProvider = new Provider();
     private boolean mException;
@@ -72,7 +73,9 @@ public class CardNfcReaderTask {
     private String mCardNumber;
     private String mExpireDate;
     private String mCardType;
-    private String mLeftPinTry; // todo new
+    private String mLeftPinTry;
+    private String mAid;
+    public static List<byte[]> mAids; // get it from EmvParser.readWithPSE()
 
     public String getCardNumber() {
         return mCardNumber;
@@ -86,9 +89,13 @@ public class CardNfcReaderTask {
         return mCardType;
     }
 
-    public String getmLeftPinTry() {
+    public String getLeftPinTry() {
         return mLeftPinTry;
-    } // todo new
+    }
+
+    public String getAid() { return mAid; }
+
+    public List<byte[]> getAids() { return mAids; }
 
     public void doInBackground(Tag mTag) {
         IsoDep mIsoDep = IsoDep.get(mTag);
@@ -106,7 +113,8 @@ public class CardNfcReaderTask {
 
             EmvParser parser = new EmvParser(mProvider, true);
             mCard = parser.readEmvCard();
-
+            String aid = mCard.getAid();
+            System.out.println("mCard1 aid: " + aid);
             System.out.println("mCard1 cardNumber: " + mCard.getCardNumber());
             onPostExecute();
         } catch (IOException e) {
@@ -119,13 +127,14 @@ public class CardNfcReaderTask {
 
     void onPostExecute() {
             if (mCard != null) {
-                System.out.println("mCard2 cardNumber: " + mCard.getCardNumber());
+                System.out.println("mCard is NOT NULL ");
                 if (StringUtils.isNotBlank(mCard.getCardNumber())) {
-                    System.out.println("mCard3 cardNumber: " + mCard.getCardNumber());
+                    System.out.println("mCard cardNumber is NOT BLANK");
                     mCardNumber = mCard.getCardNumber();
                     mExpireDate = mCard.getExpireDate();
                     mCardType = mCard.getType().toString();
-                    mLeftPinTry = String.valueOf(mCard.getLeftPinTry()); // todo new
+                    mLeftPinTry = String.valueOf(mCard.getLeftPinTry());
+                    mAid = mCard.getAid();
                     if (mCardType.equals(EmvCardScheme.UNKNOWN.toString())) {
                         LOGGER.debug(UNKNOWN_CARD_MESS);
                     }

@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  * Class used to define all supported NFC EMV paycard. <link>http://en.wikipedia.org/wiki/Europay_Mastercard_Visa</link>
  *
  */
-public enum EmvCardSchemeOrg {
+public enum EmvCardSchemeNewer {
 
 	UNKNOWN("",""),
 
@@ -75,7 +75,7 @@ public enum EmvCardSchemeOrg {
 	 * @param pRegex
 	 *            Card regex
 	 */
-	EmvCardSchemeOrg(final String pScheme, final String pRegex, final String... pAids) {
+	EmvCardSchemeNewer(final String pScheme, final String pRegex, final String... pAids) {
 		aids = pAids;
 		aidsByte = new byte[pAids.length][];
 		for (int i = 0; i < aids.length; i++) {
@@ -114,11 +114,11 @@ public enum EmvCardSchemeOrg {
 	 *            card AID
 	 * @return CardType or null
 	 */
-	public static EmvCardSchemeOrg getCardTypeByAid(final String pAid) {
-		EmvCardSchemeOrg ret = EmvCardSchemeOrg.UNKNOWN ;
+	public static EmvCardSchemeNewer getCardTypeByAid(final String pAid) {
+		EmvCardSchemeNewer ret = EmvCardSchemeNewer.UNKNOWN ;
 		if (pAid != null) {
 			String aid = StringUtils.deleteWhitespace(pAid);
-			for (EmvCardSchemeOrg val : EmvCardSchemeOrg.values()) {
+			for (EmvCardSchemeNewer val : EmvCardSchemeNewer.values()) {
 				for (String schemeAid : val.getAid()) {
 					if (aid.startsWith(StringUtils.deleteWhitespace(schemeAid))) {
 						ret = val;
@@ -137,10 +137,10 @@ public enum EmvCardSchemeOrg {
 	 *            card number
 	 * @return the type of the card using regex
 	 */
-	public static EmvCardSchemeOrg getCardTypeByCardNumber(final String pCardNumber) {
-		EmvCardSchemeOrg ret = EmvCardSchemeOrg.UNKNOWN;
+	public static EmvCardSchemeNewer getCardTypeByCardNumber(final String pCardNumber) {
+		EmvCardSchemeNewer ret = EmvCardSchemeNewer.UNKNOWN;
 		if (pCardNumber != null) {
-			for (EmvCardSchemeOrg val : EmvCardSchemeOrg.values()) {
+			for (EmvCardSchemeNewer val : EmvCardSchemeNewer.values()) {
 				if (val.pattern != null && val.pattern.matcher(StringUtils.deleteWhitespace(pCardNumber)).matches()) {
 					ret = val;
 					break;

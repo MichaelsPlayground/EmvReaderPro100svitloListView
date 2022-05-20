@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".ReadSpecial">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,20 +26,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="LAY your smartphone on the card and don't move the phone until the card data is displayed"
+            android:text="LAY your smartphone on the card and don't move the phone until the card data is displayed.\nIt may take some SECONDS to read all data from the card."
             android:textAlignment="center"
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnReadSpecial"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="read special" />
-
         <TextView
-            android:id="@+id/tvNfcaContent"
+            android:id="@+id/tvNfcaContentSpecial"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

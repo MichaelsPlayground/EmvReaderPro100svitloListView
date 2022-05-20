@@ -1,5 +1,6 @@
 package com.pro100svitlo.creditCardNfcReader.parser;
 
+import com.pro100svitlo.creditCardNfcReader.CardNfcReaderTask;
 import com.pro100svitlo.creditCardNfcReader.enums.CommandEnum;
 import com.pro100svitlo.creditCardNfcReader.enums.EmvCardScheme;
 import com.pro100svitlo.creditCardNfcReader.enums.SwEnum;
@@ -75,6 +76,15 @@ public class EmvParser {
 	 * Card data
 	 */
 	private EmvCard card;
+
+	public List<String> getApplicationLabels() {
+		return applicationLabels;
+	}
+
+	/**
+	 * Application Labels
+	 */
+	public List<String> applicationLabels = new ArrayList<>();
 
 	/**
 	 * Constructor
@@ -185,6 +195,13 @@ public class EmvParser {
 		byte[] labelByte = TlvUtil.getValue(pData, EmvTags.APPLICATION_LABEL);
 		if (labelByte != null) {
 			label = new String(labelByte);
+
+			// new
+			System.out.println("application label data:");
+			System.out.println("incomming data: " + BytesUtils.bytesToStringNoSpace(pData));
+			System.out.println("labelByte:" + BytesUtils.bytesToStringNoSpace(labelByte));
+			System.out.println("label String: " + label);
+			System.out.println("application label data end");
 		}
 		return label;
 	}
@@ -209,6 +226,8 @@ public class EmvParser {
 			if (ResponseUtils.isSucceed(data)) {
 				// Get Aids
 				List<byte[]> aids = getAids(data);
+				// store the list of aids
+				CardNfcReaderTask.mAids = aids; // new
 				for (byte[] aid : aids) {
 					ret = extractPublicData(aid, extractApplicationLabel(data));
 					if (ret == true) {
@@ -224,6 +243,48 @@ public class EmvParser {
 		}
 
 		return ret;
+	}
+
+	public List<byte[]> readWithPSEAlone() throws CommunicationException {
+		List<byte[]> aidsOnCard = null;
+		applicationLabels.clear();
+		boolean ret = false;
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Try to read card with Payment System Environment");
+		}
+		// Select the PPSE or PSE directory
+		byte[] data = selectPaymentEnvironment();
+		if (ResponseUtils.isSucceed(data)) {
+			// Parse FCI Template
+			data = parseFCIProprietaryTemplate(data);
+			// Extract application label
+			if (ResponseUtils.isSucceed(data)) {
+				// Get Aids
+				List<byte[]> aids = getAids(data);
+				aidsOnCard = aids;
+				// store the list of aids
+				CardNfcReaderTask.mAids = aids; // new
+				for (byte[] aid : aids) {
+					System.out.println("*** for (byte[] aid : aids)");
+					System.out.println("*** data: " + BytesUtils.bytesToStringNoSpace(data));
+					String appLabel = extractApplicationLabel(data);
+					System.out.println("*** appLabel: " + appLabel);
+					applicationLabels.add(appLabel);
+					ret = extractPublicData(aid, appLabel);
+					// ret = extractPublicData(aid, extractApplicationLabel(data));
+					if (ret == true) {
+						break;
+					}
+				}
+				if (!ret) {
+					card.setNfcLocked(true);
+				}
+			}
+		} else if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug((contactLess ? "PPSE" : "PSE") + " not found -> Use kown AID");
+		}
+
+		return aidsOnCard;
 	}
 
 	/**
@@ -265,6 +326,19 @@ public class EmvParser {
 		}
 	}
 
+	public void readWithAIDAlone(EmvCard myCard, byte[] aid, String schemeName) throws CommunicationException {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Try to read card with AID");
+		}
+				if (extractPublicData(aid, schemeName)) {
+					myCard.setAid(card.getAid());
+					myCard.setCardNumber(card.getCardNumber());
+					myCard.setExpireDate(card.getExpireDate());
+					myCard.setApplicationLabel(card.getApplicationLabel());
+					return;
+				}
+	}
+
 	/**
 	 * Select application with AID or RID
 	 *
@@ -291,6 +365,7 @@ public class EmvParser {
 	 */
 	protected boolean extractPublicData(final byte[] pAid, final String pApplicationLabel) throws CommunicationException {
 		boolean ret = false;
+		//applicationLabels.add(card.getApplicationLabel()); // new
 		// Select AID
 		byte[] data = selectAID(pAid);
 		// check response
@@ -312,6 +387,35 @@ public class EmvParser {
 		return ret;
 	}
 
+	public EmvCard extractPublicDataAlone(final byte[] pAid, final String pApplicationLabel) throws CommunicationException {
+		boolean ret = false;
+		EmvCard cardAlone = new EmvCard();
+		// Select AID
+		byte[] data = selectAID(pAid);
+		// check response
+		if (ResponseUtils.isSucceed(data)) {
+			// Parse select response
+			ret = parse(data, provider);
+			if (ret) {
+				// Get AID
+				String aid = BytesUtils.bytesToStringNoSpace(TlvUtil.getValue(data, EmvTags.DEDICATED_FILE_NAME));
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("Application label:" + pApplicationLabel + " with Aid:" + aid);
+				}
+				if (aid != null) {
+					cardAlone.setAid(aid);
+					cardAlone.setType(findCardScheme(aid, card.getCardNumber()));
+				} else {
+					cardAlone.setAid("null");
+					cardAlone.setType(null);
+				}
+				cardAlone.setApplicationLabel(pApplicationLabel);
+				cardAlone.setLeftPinTry(getLeftPinTry());
+			}
+		}
+		return cardAlone;
+	}
+
 	/**
 	 * Method used to find the real card scheme
 	 *
@@ -322,6 +426,18 @@ public class EmvParser {
 	 * @return card scheme
 	 */
 	protected EmvCardScheme findCardScheme(final String pAid, final String pCardNumber) {
+		EmvCardScheme type = EmvCardScheme.getCardTypeByAid(pAid);
+		// Get real type for french card
+		if (type == EmvCardScheme.CB) {
+			type = EmvCardScheme.getCardTypeByCardNumber(pCardNumber);
+			if (type != null) {
+				LOGGER.debug("Real type:" + type.getName());
+			}
+		}
+		return type;
+	}
+
+	public EmvCardScheme findCardSchemeAlone(final String pAid, final String pCardNumber) {
 		EmvCardScheme type = EmvCardScheme.getCardTypeByAid(pAid);
 		// Get real type for french card
 		if (type == EmvCardScheme.CB) {

@@ -2,53 +2,37 @@ package de.androidcrypto.emvreaderpro100svitlolistview;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.pro100svitlo.creditCardNfcReader.CardNfcReaderTask;
+import com.pro100svitlo.creditCardNfcReader.enums.EmvCardScheme;
 import com.pro100svitlo.creditCardNfcReader.model.EmvCard;
 import com.pro100svitlo.creditCardNfcReader.parser.EmvParser;
 import com.pro100svitlo.creditCardNfcReader.utils.Provider;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 import fr.devnied.bitlib.BytesUtils;
 
-public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+public class ReadSpecial extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
     TextView nfcaContent;
     private NfcAdapter mNfcAdapter;
-    Button readSpecial;
-    Intent readSpecialIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        nfcaContent = findViewById(R.id.tvNfcaContent);
-        readSpecial = findViewById(R.id.btnReadSpecial);
-        readSpecialIntent = new Intent(MainActivity.this, ReadSpecial.class);
+        setContentView(R.layout.activity_read_special);
+        nfcaContent = findViewById(R.id.tvNfcaContentSpecial);
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-
-        readSpecial.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(readSpecialIntent);
-            }
-        });
     }
 
     @Override
@@ -103,11 +87,43 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                     nfcaContent.setText("");
                 }
             });
-            //isoDep.connect();
+            isoDep.connect();
             byte[] response;
-            String idContentString = "Content of ISO-DEP tag";
+            String idContentString = "Content of ISO-DEP tag special";
+            EmvCard emvCard = new EmvCard();
+            Provider mProvider = new Provider();
+            mProvider.setmTagCom(isoDep);
+            EmvParser emvParser = new EmvParser(mProvider, true);
+            List<byte[]> aidsOnCard = emvParser.readWithPSEAlone();
+            // now the corresponding application labels are available
+            List<String> applicationLabels = new ArrayList<>();
+            applicationLabels = emvParser.getApplicationLabels();
+            idContentString = idContentString + "\n" + "number of aids on card: " + aidsOnCard.size();
+            idContentString = idContentString + "\n" + "number of application label on card: " + applicationLabels.size();
+            System.out.println("number of application label on card: " + applicationLabels.size());
+            idContentString = idContentString + "\n" + "------------------------";
+            for (int j = 0; j < applicationLabels.size(); j++) {
+                idContentString = idContentString + "\n" + "card applicationLabel " + j + " " + applicationLabels.get(j);
+            }
+            idContentString = idContentString + "\n" + "------------------------";
+            idContentString = idContentString + "\n" + "------------------------";
 
-
+            for (int i = 0; i < aidsOnCard.size(); i++) {
+                idContentString = idContentString + "\n" + "aid " + i + " data: " + BytesUtils.bytesToStringNoSpace(aidsOnCard.get(i));
+                System.out.println("** aid " + i + " : " + BytesUtils.bytesToString(aidsOnCard.get(i)));
+                emvParser.readWithAIDAlone(emvCard, aidsOnCard.get(i), "ALONE");
+                if (emvCard != null) {
+                    idContentString = idContentString + "\n" + "card number: " + prettyPrintCardNumber(emvCard.getCardNumber());
+                    idContentString = idContentString + "\n" + "card type: " + emvCard.getType();
+                    idContentString = idContentString + "\n" + "card expiration date (MM/YY): " + emvCard.getExpireDate();
+                }
+                String aidString = BytesUtils.bytesToString(aidsOnCard.get(i));
+                EmvCardScheme emvCardScheme = emvParser.findCardSchemeAlone(aidString, emvCard.getCardNumber());
+                idContentString = idContentString + "\n" + "card scheme: " + emvCardScheme;
+                idContentString = idContentString + "\n" + "card scheme: " + emvCardScheme.getName();
+                idContentString = idContentString + "\n" + "------------------------";
+            }
+/*
             CardNfcReaderTask cardNfcReaderTask = new CardNfcReaderTask();
             cardNfcReaderTask.doInBackground(tag);
             idContentString = idContentString + "\n" + "card number: " + prettyPrintCardNumber(cardNfcReaderTask.getCardNumber());
@@ -120,8 +136,6 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
             idContentString = idContentString + "\n" + "number of aids on card: " + aidsOnCard.size();
             for (int i = 0; i < aidsOnCard.size(); i++) {
                 idContentString = idContentString + "\n" + "aid " + i + " data: " + BytesUtils.bytesToStringNoSpace(aidsOnCard.get(i));
-
-/*
                 EmvCard emvCard = null;
                 Provider mProvider = new Provider();
                 mProvider.setmTagCom(isoDep);
@@ -131,8 +145,9 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                     idContentString = idContentString + "\n" + "card number: " + prettyPrintCardNumber(emvCard.getCardNumber());
                     idContentString = idContentString + "\n" + "card type: " + emvCard.getType();
                     idContentString = idContentString + "\n" + "card expiration date (MM/YY): " + emvCard.getExpireDate();
-                }*/
+                }
             }
+*/
             idContentString = idContentString + "\n" + "";
             idContentString = idContentString + "\n" + "";
             String finalIdContentString = idContentString;
