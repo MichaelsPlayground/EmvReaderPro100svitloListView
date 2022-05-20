@@ -123,31 +123,9 @@ public class ReadSpecial extends AppCompatActivity implements NfcAdapter.ReaderC
                 idContentString = idContentString + "\n" + "card scheme: " + emvCardScheme.getName();
                 idContentString = idContentString + "\n" + "------------------------";
             }
-/*
-            CardNfcReaderTask cardNfcReaderTask = new CardNfcReaderTask();
-            cardNfcReaderTask.doInBackground(tag);
-            idContentString = idContentString + "\n" + "card number: " + prettyPrintCardNumber(cardNfcReaderTask.getCardNumber());
-            idContentString = idContentString + "\n" + "card type: " + cardNfcReaderTask.getCardType();
-            idContentString = idContentString + "\n" + "card expiration date (MM/YY): " + cardNfcReaderTask.getCardExpireDate();
-            idContentString = idContentString + "\n" + "card left pin try: " + cardNfcReaderTask.getLeftPinTry();
-            idContentString = idContentString + "\n" + "card AID used: " + cardNfcReaderTask.getAid();
-            // now checking the aids available on card
-            List<byte[]> aidsOnCard = cardNfcReaderTask.getAids();
-            idContentString = idContentString + "\n" + "number of aids on card: " + aidsOnCard.size();
-            for (int i = 0; i < aidsOnCard.size(); i++) {
-                idContentString = idContentString + "\n" + "aid " + i + " data: " + BytesUtils.bytesToStringNoSpace(aidsOnCard.get(i));
-                EmvCard emvCard = null;
-                Provider mProvider = new Provider();
-                mProvider.setmTagCom(isoDep);
-                EmvParser emvParser = new EmvParser(mProvider, true);
-                emvCard = emvParser.extractPublicDataAlone(aidsOnCard.get(i), "ALONE");
-                if (emvCard != null) {
-                    idContentString = idContentString + "\n" + "card number: " + prettyPrintCardNumber(emvCard.getCardNumber());
-                    idContentString = idContentString + "\n" + "card type: " + emvCard.getType();
-                    idContentString = idContentString + "\n" + "card expiration date (MM/YY): " + emvCard.getExpireDate();
-                }
-            }
-*/
+
+            // todo read list of transactions
+
             idContentString = idContentString + "\n" + "";
             idContentString = idContentString + "\n" + "";
             String finalIdContentString = idContentString;
@@ -158,7 +136,6 @@ public class ReadSpecial extends AppCompatActivity implements NfcAdapter.ReaderC
                     nfcaContent.setText(finalIdContentString);
                 }
             });
-
 
             try {
                 isoDep.close();
