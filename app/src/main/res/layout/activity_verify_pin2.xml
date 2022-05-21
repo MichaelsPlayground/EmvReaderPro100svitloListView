@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".VerifyPin2">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="This app shows how to implement the EMV-NFC-Paycard-Enrollment library to read an EMV card via NFC."
+            android:text="VerifyPin2"
             android:textAlignment="center"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -31,29 +31,16 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnReadSpecial"
+        <EditText
+            android:id="@+id/etPinToVerify2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="read special" />
-
-        <Button
-            android:id="@+id/btnVerifyPin"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="verify pin" />
-
-        <Button
-            android:id="@+id/btnVerifyPin2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="verify pin 2" />
+            android:ems="10"
+            android:text="2731"
+            android:inputType="number" />
 
         <TextView
-            android:id="@+id/tvNfcaContent"
+            android:id="@+id/tvNfcaContentVerify2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

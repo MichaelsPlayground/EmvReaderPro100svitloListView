@@ -150,6 +150,22 @@ public class EmvParser {
 		}
 		return ret;
 	}
+	public int getLeftPinTryAlone() throws CommunicationException {
+		int ret = UNKNOW;
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Get Left PIN try");
+		}
+		// Left PIN try command
+		byte[] data = provider.transceive(new CommandApdu(CommandEnum.GET_DATA, 0x9F, 0x17, 0).toBytes());
+		if (ResponseUtils.isSucceed(data)) {
+			// Extract PIN try counter
+			byte[] val = TlvUtil.getValue(data, EmvTags.PIN_TRY_COUNTER);
+			if (val != null) {
+				ret = BytesUtils.byteArrayToInt(val);
+			}
+		}
+		return ret;
+	}
 
 	/**
 	 * Method used to parse FCI Proprietary Template
@@ -351,7 +367,42 @@ public class EmvParser {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Select AID: " + BytesUtils.bytesToString(pAid));
 		}
+		System.out.println("* selectAid command: " + com.pro100svitlo.creditCardNfcReader.utils.BytesUtils.bytesToString(new CommandApdu(CommandEnum.SELECT, pAid, 0).toBytes()));
 		return provider.transceive(new CommandApdu(CommandEnum.SELECT, pAid, 0).toBytes());
+	}
+
+	public byte[] selectAIDAlone(final byte[] pAid) throws CommunicationException {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Select AID: " + BytesUtils.bytesToString(pAid));
+		}
+		System.out.println("* selectAid: " + BytesUtils.bytesToString(pAid));
+		return provider.transceive(new CommandApdu(CommandEnum.SELECT, pAid, 0).toBytes());
+	}
+
+	// new for sending command to verify PIN
+	public byte[] getProcessingOptionsForPinVerificationAlone() throws CommunicationException {
+		// needs to be 80 A8 00 00 02 83 00 00
+		//byte[] command = hexStringToByteArray("80A8000002830000");
+		byte[] commandShort = hexStringToByteArray("8300");
+		byte[] commandApdu = new CommandApdu(CommandEnum.GPO, commandShort, 0).toBytes();
+		System.out.println("* commandShort for Pin: " + BytesUtils.bytesToString(commandShort));
+		System.out.println("* commandApdu: " + BytesUtils.bytesToString(commandApdu));
+		return provider.transceive(new CommandApdu(CommandEnum.GPO, commandShort, 0).toBytes());
+		//return commandApdu;
+	}
+
+	// new for sending command to verify the pin
+	public byte[] verifyAPinAlone(String pinToVerify) throws CommunicationException {
+
+		// needs to be 002000800824xxxxFFFFFFFFFF
+		// (where xxxx is a 4 digit PIN)
+		//byte[] command = hexStringToByteArray("80A8000002830000");
+		String commandHeader = "002000800824";
+		String commandFooter = "FFFFFFFFFF";
+		byte[] commandApdu = hexStringToByteArray(commandHeader + pinToVerify + commandFooter);
+		System.out.println("* commandApdu PIN: " + BytesUtils.bytesToString(commandApdu));
+		return provider.transceive(commandApdu);
+		//return commandApdu;
 	}
 
 	/**
@@ -370,6 +421,7 @@ public class EmvParser {
 		byte[] data = selectAID(pAid);
 		// check response
 		if (ResponseUtils.isSucceed(data)) {
+			System.out.println("* extractPublicData response: " + BytesUtils.bytesToStringNoSpace(data));
 			// Parse select response
 			ret = parse(data, provider);
 			if (ret) {
@@ -467,14 +519,18 @@ public class EmvParser {
 		boolean ret = false;
 		// Get TLV log entry
 		byte[] logEntry = getLogEntry(pSelectResponse);
+		System.out.println("* TLV logEntry: " + BytesUtils.bytesToStringNoSpace(logEntry));
 		// Get PDOL
 		byte[] pdol = TlvUtil.getValue(pSelectResponse, EmvTags.PDOL);
+		System.out.println("* pdol: " + BytesUtils.bytesToStringNoSpace(pdol));
 		// Send GPO Command
 		byte[] gpo = getGetProcessingOptions(pdol, pProvider);
+		System.out.println("* gpo: " + BytesUtils.bytesToStringNoSpace(gpo));
 
 		// Check empty PDOL
 		if (!ResponseUtils.isSucceed(gpo)) {
 			gpo = getGetProcessingOptions(null, pProvider);
+			System.out.println("* empty - new gpo: " + BytesUtils.bytesToStringNoSpace(gpo));
 			// Check response
 			if (!ResponseUtils.isSucceed(gpo)) {
 				return false;
@@ -677,6 +733,16 @@ public class EmvParser {
 	 */
 	public EmvCard getCard() {
 		return card;
+	}
+
+	public byte[] hexStringToByteArray(String s) {
+		int len = s.length();
+		byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+					+ Character.digit(s.charAt(i + 1), 16));
+		}
+		return data;
 	}
 
 }

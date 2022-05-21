@@ -5,6 +5,8 @@
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="app/src/main/res/layout/activity_read_special.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_verify_pin.xml" value="0.13333333333333333" />
+        <entry key="app/src/main/res/layout/activity_verify_pin2.xml" value="0.1" />
       </map>
     </option>
   </component>

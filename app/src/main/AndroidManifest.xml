@@ -17,6 +17,12 @@
         android:theme="@style/Theme.EmvReaderPro100svitloListView"
         tools:targetApi="31">
         <activity
+            android:name=".VerifyPin2"
+            android:exported="false" />
+        <activity
+            android:name=".VerifyPin"
+            android:exported="false" />
+        <activity
             android:name=".ReadSpecial"
             android:exported="false" />
         <activity

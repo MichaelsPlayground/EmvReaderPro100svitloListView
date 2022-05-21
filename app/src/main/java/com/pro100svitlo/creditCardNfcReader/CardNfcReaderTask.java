@@ -76,6 +76,9 @@ public class CardNfcReaderTask {
     private String mLeftPinTry;
     private String mAid;
     public static List<byte[]> mAids; // get it from EmvParser.readWithPSE()
+    private EmvParser parserInUse;
+
+    public EmvParser getParserInUse() { return parserInUse; }
 
     public String getCardNumber() {
         return mCardNumber;
@@ -112,6 +115,7 @@ public class CardNfcReaderTask {
             mProvider.setmTagCom(mIsoDep);
 
             EmvParser parser = new EmvParser(mProvider, true);
+            parserInUse = parser;
             mCard = parser.readEmvCard();
             String aid = mCard.getAid();
             System.out.println("mCard1 aid: " + aid);
@@ -120,7 +124,7 @@ public class CardNfcReaderTask {
         } catch (IOException e) {
             mException = true;
         } finally {
-            IOUtils.closeQuietly(mIsoDep);
+            //IOUtils.closeQuietly(mIsoDep); // not closed to further readings
         }
 
     }

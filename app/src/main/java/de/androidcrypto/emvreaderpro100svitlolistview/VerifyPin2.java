@@ -12,12 +12,16 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.pro100svitlo.creditCardNfcReader.CardNfcReaderTask;
 import com.pro100svitlo.creditCardNfcReader.model.EmvCard;
 import com.pro100svitlo.creditCardNfcReader.parser.EmvParser;
 import com.pro100svitlo.creditCardNfcReader.utils.Provider;
+import com.pro100svitlo.creditCardNfcReader.utils.ResponseUtils;
+
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -27,44 +31,21 @@ import java.util.List;
 
 import fr.devnied.bitlib.BytesUtils;
 
-public class MainActivity extends AppCompatActivity implements NfcAdapter.ReaderCallback {
+public class VerifyPin2 extends AppCompatActivity implements NfcAdapter.ReaderCallback {
 
     TextView nfcaContent;
     private NfcAdapter mNfcAdapter;
-    Button readSpecial, verifyPin , verifyPin2;
-    Intent readSpecialIntent, verifyPinIntent, verifyPin2Intent;
+    EditText pinToVerify;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        nfcaContent = findViewById(R.id.tvNfcaContent);
-        readSpecial = findViewById(R.id.btnReadSpecial);
-        readSpecialIntent = new Intent(MainActivity.this, ReadSpecial.class);
-        verifyPin = findViewById(R.id.btnVerifyPin);
-        verifyPinIntent = new Intent(MainActivity.this, VerifyPin.class);
-        verifyPin2 = findViewById(R.id.btnVerifyPin2);
-        verifyPin2Intent = new Intent(MainActivity.this, VerifyPin2.class);
+        setContentView(R.layout.activity_verify_pin2);
+        nfcaContent = findViewById(R.id.tvNfcaContentVerify2);
         mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        pinToVerify = findViewById(R.id.etPinToVerify2);
 
-        readSpecial.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(readSpecialIntent);
-            }
-        });
-        verifyPin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(verifyPinIntent);
-            }
-        });
-        verifyPin2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(verifyPin2Intent);
-            }
-        });
     }
 
     @Override
@@ -149,6 +130,61 @@ public class MainActivity extends AppCompatActivity implements NfcAdapter.Reader
                     idContentString = idContentString + "\n" + "card expiration date (MM/YY): " + emvCard.getExpireDate();
                 }*/
             }
+
+            // first check that a digit number was entered in EditText pinToVerify
+            // if not stop the complete process !!!
+            String pin = pinToVerify.getText().toString();
+            if (pin.length() != 4) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //UI related things, not important for NFC
+                        nfcaContent.setText("entered PIN has to be exact 4 digits long !");
+                    }
+                });
+                return;
+            }
+            // now check for digits only, should not happen because EditText is of type number
+            if (!pin.matches("[0-9]+")) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //UI related things, not important for NFC
+                        nfcaContent.setText("entered PIN has to be digits and nothing else !");
+                    }
+                });
+                return;
+            }
+            byte[] pinBytes = hexStringToByteArray(pin);
+
+            // third: check left pin try before verifying
+            EmvParser emvParser = cardNfcReaderTask.getParserInUse();
+            int leftPinTry = emvParser.getLeftPinTryAlone();
+            idContentString = idContentString + "\n" + "leftPinTry: " + leftPinTry;
+
+            // fourth: verify the pin
+            idContentString = idContentString + "\n" + "now we are verifying the entered PIN";
+            byte[] responsePinVerification = emvParser.verifyAPinAlone(pin);
+            idContentString = idContentString + "\n" + "response after PinVerification: " + BytesUtils.bytesToString(responsePinVerification);
+            if (ResponseUtils.isSucceed(responsePinVerification)) {
+                idContentString = idContentString + "\n" + "response Pin verification succed";
+            } else {
+                idContentString = idContentString + "\n" + "response Pin verification NOT succed";
+                String finalIdContentString = idContentString;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //UI related things, not important for NFC
+                        nfcaContent.setText(finalIdContentString);
+                    }
+                });
+            }
+            // third: check left pin try after verifying
+            int leftPinTryAfter = emvParser.getLeftPinTryAlone();
+            idContentString = idContentString + "\n" + "leftPinTryAfter: " + leftPinTryAfter;
+
+
+
             idContentString = idContentString + "\n" + "";
             idContentString = idContentString + "\n" + "";
             String finalIdContentString = idContentString;
