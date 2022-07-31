@@ -23,6 +23,8 @@ public class Provider implements IProvider {
 
     @Override
     public byte[] transceive(byte[] pCommand) throws CommunicationException {
+        // todo remove manual debug
+        System.out.println("*#* pCommand: " + BytesUtils.bytesToString(pCommand));
         byte[] response = null;
         try {
             // send command to emv card
@@ -32,11 +34,17 @@ public class Provider implements IProvider {
         }
 
         LOGGER.debug("resp: " + BytesUtils.bytesToString(response));
+        // todo remove manual debug
+        System.out.println("*#* response: " + BytesUtils.bytesToString(response));
         try {
             LOGGER.debug("resp: " + TlvUtil.prettyPrintAPDUResponse(response));
+            // todo remove manual debug
+            System.out.println("*#* response prettyPrintAPDUResponse: : " + TlvUtil.prettyPrintAPDUResponse(response));
             SwEnum val = SwEnum.getSW(response);
             if (val != null) {
                 LOGGER.debug("resp: " + val.getDetail());
+                // todo remove manual debug
+                System.out.println("*#* resp. getDetail: " + val.getDetail());
             }
         } catch (Exception e) {
         }

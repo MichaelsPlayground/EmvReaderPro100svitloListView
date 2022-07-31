@@ -49,6 +49,9 @@ public final class ResponseUtils {
 					LOGGER.debug("Response Status <"
 							+ q + "> : "
 							+ (val != null ? val.getDetail() : "Unknow"));
+					// todo remove debug print
+			System.out.println("*#* Response status: <" + q + "> : "
+					+ (val != null ? val.getDetail() : "Unknow"));
 		}
 		return val != null && val == pEnum;
 	}

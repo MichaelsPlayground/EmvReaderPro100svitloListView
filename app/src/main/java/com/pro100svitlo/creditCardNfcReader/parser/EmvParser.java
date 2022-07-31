@@ -109,6 +109,8 @@ public class EmvParser {
 		// use PSE first
 		if (!readWithPSE()) {
 			// Find with AID
+			// todo remove debug print
+			System.out.println("*#* now readWithAid");
 			readWithAID();
 		}
 		return card;
@@ -124,6 +126,8 @@ public class EmvParser {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Select " + (contactLess ? "PPSE" : "PSE") + " Application");
 		}
+		// todo remove debug print
+		System.out.println("*#* contactless: " + contactLess + " choose: " + (contactLess ? PPSE : PSE));
 		// Select the PPSE or PSE directory
 		return provider.transceive(new CommandApdu(CommandEnum.SELECT, contactLess ? PPSE : PSE, 0).toBytes());
 	}
@@ -234,8 +238,13 @@ public class EmvParser {
 			LOGGER.debug("Try to read card with Payment System Environment");
 		}
 		// Select the PPSE or PSE directory
+		// todo remove debug print
+		System.out.println("*#* select PPSE or PSE, selectPaymentEnvironment");
 		byte[] data = selectPaymentEnvironment();
+		System.out.println("*#* data: " + BytesUtils.bytesToString(data));
 		if (ResponseUtils.isSucceed(data)) {
+			// todo remove debug print
+			System.out.println("*#* Response is succeed");
 			// Parse FCI Template
 			data = parseFCIProprietaryTemplate(data);
 			// Extract application label
@@ -255,6 +264,8 @@ public class EmvParser {
 				}
 			}
 		} else if (LOGGER.isDebugEnabled()) {
+			// todo remove debug print
+			System.out.println("*#* " + (contactLess ? "PPSE" : "PSE") + " not found -> Use kown AID");
 			LOGGER.debug((contactLess ? "PPSE" : "PSE") + " not found -> Use kown AID");
 		}
 
